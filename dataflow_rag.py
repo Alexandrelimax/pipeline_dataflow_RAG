@@ -17,7 +17,7 @@ def get_essential_metadata(bucket_name, file_name):
             'file_name': blob.name,
             'mime_type': blob.content_type,
             'gs_uri': f'gs://{bucket_name}/{file_name}',
-            'signed_url': blob.generate_signed_url(expiration=3600),
+
         }
         return metadata
     else:

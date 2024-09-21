@@ -1,5 +1,5 @@
 from google.cloud import storage, bigquery
-from strategies.context import DocumentLoaderFactory
+from factory.loader_factory import DocumentLoaderFactory
 import os
 from utils.create_temp_directory import create_temp_folder
 # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'service_account.json'
