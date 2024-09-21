@@ -1,20 +1,26 @@
 import os
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from dotenv import load_dotenv
+
 from src.storage.storage_manager import GoogleCloudStorageManager
 from src.processor.text_processor import TextProcessor
 from src.factory.loader_factory import DocumentLoaderFactory
+from src.database.bigquery_vectordb import BigQueryVectorDatabase
+load_dotenv()
 
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'service_account.json'
+project_id = os.getenv('PROJECT_ID')
+dataset_id = os.getenv('DATASET_ID')
+table_id = os.getenv('TABLE_ID')
+google_credentials = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+bucket_name = os.getenv('BUCKET_NAME')
 
-bucket_name = 'bucket_alexandre_teste'
+
 storage_client = GoogleCloudStorageManager(bucket_name)
-
+bigquery_db = BigQueryVectorDatabase(project_id=project_id, dataset_id=dataset_id, table_id=table_id)
 
 files_to_download = storage_client.list_files_in_bucket()
 list_file_path = storage_client.download_files(files_to_download)
 text_processor = TextProcessor()
-
 
 for file_path in list_file_path:
 
@@ -23,9 +29,9 @@ for file_path in list_file_path:
     loader = DocumentLoaderFactory.get_loader(file_path)
     content = loader.load(file_path)
 
-    # print(content[0].page_content)
-
     chunks = text_processor.chunk_documents(content[0].page_content)
     chunk_embeddings = text_processor.generate_embeddings(chunks, metadata)
-    print(chunk_embeddings)
+
+    bigquery_db.save_embeddings(chunk_embeddings)
+
 
