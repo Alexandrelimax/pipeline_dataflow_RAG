@@ -1,1 +1,0 @@
-from .bigquery_vectordb import BigQueryVectorDatabase

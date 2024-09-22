@@ -15,10 +15,10 @@ class TextProcessor:
         return self.text_splitter.split_text(document)
 
     def generate_embeddings(self, chunks: List[str], metadata: Dict[str, str]) -> List[Dict[str, Any]]:
-        embeddings = []
+        document_info = []
         for i, chunk in enumerate(chunks):
             embedding = self.embedding_model.embed_query(chunk)
-            embeddings.append({
+            document_info.append({
                 'uuid': generate_uuid(),
                 'embeddings': embedding,
                 'content': chunk,
@@ -27,4 +27,4 @@ class TextProcessor:
                 'mime_type': metadata.get('mime_type', ''),
                 'gs_uri': metadata.get('gs_uri', '')
             })
-        return embeddings
+        return document_info

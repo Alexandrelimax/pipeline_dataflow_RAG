@@ -11,4 +11,5 @@ docx2txt==0.8
 pypdf==5.0.0
 pandas==2.2.3
 python-dotenv==1.0.1
-pyarrow==17.0.0
+pyarrow
+apache-beam[gcp]
