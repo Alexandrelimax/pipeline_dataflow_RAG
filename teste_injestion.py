@@ -14,9 +14,9 @@ from retrievers.bigquery_retriever import BigQueryRetriever
 from prompts.prompt_retriever import prompt
 
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'service_account_super.json'
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'service_account.json'
 # Configurações
-PROJECT_ID = 'tokyo-comfort-436522-a3'
+PROJECT_ID = ''
 REGION = 'us-central1'
 DATASET = "demo_langchain_dataset"
 TABLE = "doc_and_vectors"
