@@ -1,28 +1,46 @@
 from fastapi import FastAPI
-
+import vertexai
+from langchain_google_vertexai import VertexAI
+from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_google_community import BigQueryVectorStore
 from controllers.similarity_controller import SimilaritySearchController
-from services.similarity_service import ChatBotService
-from services.stt_service import SpeechToTextService
-from services.dialogflow_service import DialogflowCXService
-from services.tts_service import TextToSpeechService
+from services.similarity_service import SimilarityService
+from handlers.local_file_handler import LocalFileHandler
 
 app = FastAPI()
+PROJECT_ID = ''
+REGION = 'us-central1'
+DATASET = "vector_store"
+TABLE = "doc_and_vectors"
+
+MODEL = 'gemini-1.5-flash'
+MAX_OUTPUT_TOKENS = 1000
+TEMPERATURE = 1
+TOP_P = 0.95
 
 
-speech_to_text_service = SpeechToTextService()
-dialogflow_service = DialogflowCXService(project_id="your-project-id")
-text_to_speech_service = TextToSpeechService()
+vertexai.init(project=PROJECT_ID, location=REGION)
+llm_client = VertexAI(model_name=MODEL,max_output_tokens=MAX_OUTPUT_TOKENS,temperature=TEMPERATURE, top_p=TOP_P)
 
-chat_bot_service = ChatBotService(
-    speech_to_text_service=speech_to_text_service,
-    dialogflow_service=dialogflow_service,
-    text_to_speech_service=text_to_speech_service
+embeddings_model = VertexAIEmbeddings(model_name="text-embedding-004")
+
+vector_store = BigQueryVectorStore(
+    project_id=PROJECT_ID,
+    dataset_name=DATASET,
+    table_name=TABLE,
+    location=REGION,
+    embedding=embeddings_model
 )
 
+file_handler = LocalFileHandler()
 
-chat_bot_controller = ChatBotController(chat_bot_service)
+similarity_service = SimilarityService(vector_store=vector_store, llm_client=llm_client, file_handler=file_handler)
 
-app.include_router(chat_bot_controller.router)
+similarity_controller = SimilaritySearchController(similarity_service=similarity_service)
+
+app.include_router(similarity_controller.router)
+
+
 
 @app.get("/")
 def read_root():

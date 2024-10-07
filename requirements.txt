@@ -1,3 +1,10 @@
+#backend
+fastapi==0.115.0
+
+
+
+
+#pipeline
 langchain-google-community==1.0.7
 langchain-google-vertexai==1.0.8
 google-cloud-aiplatform==1.60.0
@@ -13,3 +20,17 @@ pandas==2.2.3
 python-dotenv==1.0.1
 pyarrow
 apache-beam[gcp]
+
+
+
+# langchain
+# langchain-google-community
+# google-cloud-bigquery
+# langchain-google-genai
+# langchain_google_vertexai
+# vertexai
+# pandas
+# langchain-google-community[featurestore]
+# beautifulsoup4
+# docx2txt==0.8
+# pypdf==5.0.0

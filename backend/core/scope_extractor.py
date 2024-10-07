@@ -11,14 +11,14 @@ class ScopeExtractor:
         # Divida o texto em chunks
         chunks = self.text_splitter.split_text(document_text)
         
-        scope_chunks = []
+        relevant_texts = []
 
         # Verifique cada chunk para palavras-chave
         for chunk in chunks:
             if self.contains_scope_keywords(chunk):
-                scope_chunks.append(chunk)
+                relevant_texts.append(chunk)
 
-        return scope_chunks
+        return relevant_texts
 
     def contains_scope_keywords(self, text: str) -> bool:
         # Construa um padrão regex para verificar as palavras-chave

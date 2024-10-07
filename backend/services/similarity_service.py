@@ -1,13 +1,21 @@
+from typing import Any
 from interfaces.similarity_interface import ISimilarity
 from factory.loader_factory import DocumentLoaderFactory
-from repositories.vector_repository import VectorRepository
+from core.prompts.prompt_retriever import prompt
+from core.retrievers.bigquery_retriever import BigQueryRetriever
 from interfaces.file_handler_interface import FileHandlerInterface
-from typing import Any
+from langchain.chains.combine_documents.stuff import create_stuff_documents_chain
+from langchain.chains.retrieval import create_retrieval_chain
+
+
+
 
 class SimilarityService(ISimilarity):
-    def __init__(self, vector_repository: VectorRepository, file_handler: FileHandlerInterface):
-        self.vector_repository = vector_repository
+    def __init__(self, vector_store, llm_client, file_handler: FileHandlerInterface):
+        self.llm_client = llm_client
         self.file_handler = file_handler
+        self.retriever = BigQueryRetriever(vector_store=vector_store)
+
 
     async def process_document(self, document_data: bytes, file_name: str) -> Any:
 
@@ -15,55 +23,23 @@ class SimilarityService(ISimilarity):
         try:
             self.file_handler.write(temp_file_path, document_data)
             loader = DocumentLoaderFactory.get_loader(temp_file_path)
-            document_text = loader.load(temp_file_path)
+            chunks = loader.extract_chunks_from_document(temp_file_path, start_chunk=4, end_chunk=8)
+
+
+
+
         except ValueError as e:
             raise ValueError(f"Erro ao carregar o documento: {e}")
         finally:
             self.file_handler.remove(temp_file_path)
 
+        return await self.perform_similarity_search(document_text)
         
 
 
-
-
-
-
-        return await self.perform_similarity_search(document_text)
-
     async def process_text(self, text: str) -> Any:
-        """
-        Processa o texto diretamente e realiza a busca por similaridade.
-
-        Args:
-            text (str): O texto a ser processado.
-
-        Returns:
-            Any: Resultado da busca por similaridade.
-        """
-        return await self.perform_similarity_search(text)
-
-    async def perform_similarity_search(self, text: str) -> Any:
-        """
-        Realiza a busca por similaridade com base no texto fornecido.
-
-        Args:
-            text (str): O texto extraído ou fornecido.
-
-        Returns:
-            Any: Resultado da busca por similaridade.
-        """
-        embedding = self.generate_embedding(text)
-        search_results = self.vector_repository.search_similar_documents(embedding)
-        return {"similarity_results": search_results}
-
-    def generate_embedding(self, text: str) -> list:
-        """
-        Gera um embedding do texto.
-
-        Args:
-            text (str): O texto a ser embeddado.
-
-        Returns:
-            list: Embedding gerado a partir do texto.
-        """
-        return [0.1, 0.2, 0.3]  # Substitua com a lógica real de embeddings
+        #Realiza a busca por similaridade com base no texto fornecido.
+        document_chain = create_stuff_documents_chain(self.llm_client, prompt)
+        retrieval_chain = create_retrieval_chain(self.retriever, document_chain)
+        response = retrieval_chain.invoke({"input": text})
+        return response['answer']

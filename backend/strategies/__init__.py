@@ -1,2 +1,2 @@
-from .docx_document import DocxLoader
-from .pdf_document import PDFLoader
+from .docx_chunk_extractor import DocxChunkExtractor
+from .pdf_chunk_extractor import PDFChunkExtractor
