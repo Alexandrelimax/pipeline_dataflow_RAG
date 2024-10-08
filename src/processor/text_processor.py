@@ -1,6 +1,6 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_vertexai import VertexAIEmbeddings
-from src.utils.generate_id import generate_uuid
+from src.storage.generate_id import generate_uuid
 from typing import List, Dict, Any
 
 class TextProcessor:

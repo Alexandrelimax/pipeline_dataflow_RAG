@@ -6,17 +6,19 @@ from langchain_google_community import BigQueryVectorStore
 from controllers.similarity_controller import SimilaritySearchController
 from services.similarity_service import SimilarityService
 from handlers.local_file_handler import LocalFileHandler
+import os
+
+
 
 app = FastAPI()
-PROJECT_ID = ''
-REGION = 'us-central1'
-DATASET = "vector_store"
-TABLE = "doc_and_vectors"
-
-MODEL = 'gemini-1.5-flash'
-MAX_OUTPUT_TOKENS = 1000
-TEMPERATURE = 1
-TOP_P = 0.95
+PROJECT_ID = os.getenv('PROJECT_ID')
+REGION = os.getenv('REGION')
+DATASET = os.getenv('DATASET')
+TABLE = os.getenv('TABLE')
+MODEL = os.getenv('MODEL')
+MAX_OUTPUT_TOKENS = os.getenv('MAX_OUTPUT_TOKENS')
+TEMPERATURE = os.getenv('TEMPERATURE')
+TOP_P = os.getenv('TOP_P')
 
 
 vertexai.init(project=PROJECT_ID, location=REGION)
@@ -32,6 +34,7 @@ vector_store = BigQueryVectorStore(
     embedding=embeddings_model
 )
 
+
 file_handler = LocalFileHandler()
 
 similarity_service = SimilarityService(vector_store=vector_store, llm_client=llm_client, file_handler=file_handler)
@@ -39,6 +42,8 @@ similarity_service = SimilarityService(vector_store=vector_store, llm_client=llm
 similarity_controller = SimilaritySearchController(similarity_service=similarity_service)
 
 app.include_router(similarity_controller.router)
+
+
 
 
 

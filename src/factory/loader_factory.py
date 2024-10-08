@@ -1,12 +1,12 @@
 from src.interfaces.document_loader import DocumentLoader
-from src.strategies.docx_document import DocxLoader
-from src.strategies.pdf_document import PDFLoader
+from src.strategies.docx_chunk_extractor import DocxChunkExtractor
+from src.strategies.pdf_chunk_extractor import PDFChunkExtractor
 
 
 class DocumentLoaderFactory:
     loaders = {
-        '.pdf': PDFLoader,
-        '.docx': DocxLoader
+        '.pdf': PDFChunkExtractor,
+        '.docx': DocxChunkExtractor
     }
 
     @staticmethod

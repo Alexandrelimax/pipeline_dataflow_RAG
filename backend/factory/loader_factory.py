@@ -1,6 +1,6 @@
 import os
 
-from src.interfaces.document_loader import DocumentLoader
+from interfaces.document_loader import DocumentLoader
 from strategies.pdf_chunk_extractor import PDFChunkExtractor
 from strategies.docx_chunk_extractor import DocxChunkExtractor
 
