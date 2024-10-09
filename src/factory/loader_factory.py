@@ -1,4 +1,4 @@
-from src.interfaces.document_loader import DocumentLoader
+
 from src.strategies.docx_chunk_extractor import DocxChunkExtractor
 from src.strategies.pdf_chunk_extractor import PDFChunkExtractor
 
@@ -10,7 +10,7 @@ class DocumentLoaderFactory:
     }
 
     @staticmethod
-    def get_loader(file_path: str) -> DocumentLoader:
+    def get_loader(file_path: str):
         for ext, loader in DocumentLoaderFactory.loaders.items():
             if file_path.endswith(ext):
                 return loader()

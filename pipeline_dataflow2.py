@@ -7,7 +7,7 @@ from langchain_google_community import BigQueryVectorStore
 from langchain_google_vertexai import VertexAIEmbeddings
 
 from src.factory.loader_factory import DocumentLoaderFactory
-from src.strategies.docx_chunk_extractor import DocxChunkExtractor
+from langchain.vectorstores.utils import DistanceStrategy
 from src.strategies.metadata_extractor import MetadataExtractor
 from src.storage.storage_operator import download_blob, file_metadata, list_files_in_bucket
 
@@ -19,7 +19,7 @@ class DownloadFileGCS(beam.DoFn):
     def process(self, file_path):
         local_file_path = download_blob(self.bucket_name, file_path)
         metadata = file_metadata(self.bucket_name, file_path)
-
+        
         yield (local_file_path, metadata)
 
 
@@ -39,22 +39,24 @@ class ChunkProcessor(beam.DoFn):
             dataset_name=self.dataset_name,
             table_name=self.table_name,
             location=self.region,
-            embedding=self.embedding_model
+            embedding=self.embedding_model,
+            distance_strategy=DistanceStrategy.EUCLIDEAN_DISTANCE
         )
 
     def process(self, content_metadata):
         local_file_path, metadata = content_metadata
-        loader = DocumentLoaderFactory.get_loader(local_file_path)
+        file_path = os.path.normpath(local_file_path)
 
+        loader = DocumentLoaderFactory.get_loader(file_path)
         try:
-            chunks = loader.extract_chunks_from_document(local_file_path)
+            chunks = loader.extract_chunks_from_document(file_path)
             metadatas = [MetadataExtractor.extract_metadata(index, metadata) for index, _ in enumerate(chunks)]
 
-            # print(chunks)
             self.vector_store.add_texts(metadatas=metadatas, texts=chunks)
-            yield f"Processado {metadata.get('file_name')}"
+
+            yield f"Processado"
         except Exception as e:
-            yield f"Erro ao processar {metadata.get('file_name')}: {e}"
+            yield f"Erro ao processar"
 
 
 
@@ -74,12 +76,15 @@ def run_pipeline(bucket_name, project, dataset, table, region):
         )
 
 if __name__ == "__main__":
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'service_account.json'
 
-    load_dotenv()
+    load_dotenv(override=True)
+    
     project = os.environ.get('PROJECT')
     region = os.environ.get('REGION')
     dataset = os.environ.get('DATASET')
     table = os.environ.get('TABLE')
     bucket_name = os.environ.get('BUCKET_NAME')
-    google_credentials = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+
     run_pipeline(bucket_name, project, dataset, table, region)
+

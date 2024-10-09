@@ -9,25 +9,19 @@ from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_google_vertexai import VertexAI
 from langchain.chains.combine_documents.stuff import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
+from dotenv import load_dotenv
 
+load_dotenv()
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'service_account.json'
-# Configurações
-PROJECT_ID = ''
-REGION = 'us-central1'
-DATASET = "demo_langchain_dataset"
-TABLE = "doc_and_vectors"
 
-MODEL = 'gemini-1.5-flash'
-MAX_OUTPUT_TOKENS = 1000
-TEMPERATURE = 1
-TOP_P = 0.95
-
-PROJECT_ID = os.getenv('PROJECT_ID')
-REGION = os.getenv('REGION')
+PROJECT_ID = os.environ.get('PROJECT')
+REGION = os.environ.get('REGION')
+DATASET = os.environ.get('DATASET')
+TABLE = os.environ.get('TABLE')
 MODEL = os.getenv('MODEL')
-MAX_OUTPUT_TOKENS = os.getenv('MAX_OUTPUT_TOKENS')
 TEMPERATURE = os.getenv('TEMPERATURE')
+MAX_OUTPUT_TOKENS = os.getenv('MAX_OUTPUT_TOKENS')
 TOP_P = os.getenv('TOP_P')
 
 
@@ -58,24 +52,29 @@ def ingest_vectors(url, context, truncate_all=False):
     # Adiciona os textos ao BigQuery Vector Store
     vector_store.add_texts(metadatas=metadata, texts=[d.page_content for d in documents])
 
+
+
+def search(query):
+
+    document_chain = create_stuff_documents_chain(llm, prompt)
+    retriever = BigQueryRetriever(vector_store=vector_store)
+    retrieval_chain = create_retrieval_chain(retriever, document_chain)
+    response = retrieval_chain.invoke({"input": query})
+    return response['answer']
+
+
+
 def ingest():
     ingest_vectors(context="langsmith_pricing", url="https://docs.smith.langchain.com/pricing", truncate_all=True)
-    ingest_vectors(context="cloud_workstations",
-                   url="https://practical-gcp.dev/scaling-development-teams-with-cloud-workstations/")
-    ingest_vectors(context="bigframes",
-                   url="https://practical-gcp.dev/serverless-distributed-processing-with-bigframes/")
-    ingest_vectors(context="dataplex",
-                   url="https://practical-gcp.dev/automated-data-profiling-and-quality-scan-via-dataplex/")
+    # ingest_vectors(context="cloud_workstations",
+    #                url="https://practical-gcp.dev/scaling-development-teams-with-cloud-workstations/")
+    # ingest_vectors(context="bigframes",
+    #                url="https://practical-gcp.dev/serverless-distributed-processing-with-bigframes/")
+    # ingest_vectors(context="dataplex",
+    #                url="https://practical-gcp.dev/automated-data-profiling-and-quality-scan-via-dataplex/")
 
 ingest()
 
-# def search(query):
-
-#     document_chain = create_stuff_documents_chain(llm, prompt)
-#     retriever = BigQueryRetriever(vector_store=vector_store)
-#     retrieval_chain = create_retrieval_chain(retriever, document_chain)
-#     response = retrieval_chain.invoke({"input": query})
-#     return response['answer']
 
 # answer = search(query="how much free trace i get one the plus package with langsmith", filter={"context": "langsmith_pricing"})
 # print(answer)
